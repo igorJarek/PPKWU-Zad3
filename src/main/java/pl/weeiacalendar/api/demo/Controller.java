@@ -1,5 +1,9 @@
 package pl.weeiacalendar.api.demo;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
@@ -15,6 +19,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,12 +28,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/downloadICS")
+@RequestMapping(path = "/downloadICS", method = RequestMethod.GET)
 public class Controller {
     @GetMapping
-    String downloadICS()
+    ResponseEntity<Resource> downloadICS()
     {
-        String output = new String();
+        InputStreamResource resource = null;
         try
         {
             Map<String, Integer> months = new HashMap<String, Integer>();
@@ -81,13 +86,30 @@ public class Controller {
                 }
             }
 
-            output = calendar.toString();
+            FileOutputStream fileOutputStream = null;
+            CalendarOutputter calendarOutputter = new CalendarOutputter();
+            try
+            {
+                fileOutputStream = new FileOutputStream("WEEIiA-Calendar.ics");
+                calendarOutputter.output(calendar, fileOutputStream);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            resource = new InputStreamResource(new FileInputStream("WEEIiA-Calendar.ics"));
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
 
-        return output;
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
     }
 }

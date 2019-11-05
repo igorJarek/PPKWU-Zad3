@@ -30,6 +30,7 @@ build/
 ### VS Code ###
 .vscode/
 
+*.ics
 .idea
 .mvn
 target
